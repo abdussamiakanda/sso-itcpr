@@ -146,8 +146,14 @@ async function checkAuthState() {
             currentUser = user;
             
             if (isPopupMode) {
-                // In popup mode, send auth data to parent and close
-                handlePopupAuth();
+                // In popup mode, check if we have a custom token
+                if (customToken) {
+                    // We have a custom token, send auth data to parent and close
+                    handlePopupAuth();
+                } else {
+                    // No custom token, show login form to get one
+                    showLogin();
+                }
             } else {
                 // Normal mode, show dashboard
                 showDashboard();
@@ -203,8 +209,15 @@ async function handleEmailLogin(e) {
             currentUser = user;
 
             hideError();
-            showDashboard();
-            updateUserInfo();
+            
+            if (isPopupMode) {
+                // In popup mode, send auth data to parent and close
+                handlePopupAuth();
+            } else {
+                // Normal mode, show dashboard
+                showDashboard();
+                updateUserInfo();
+            }
         } else {
             throw new Error(data.error || 'Failed to get SSO token from API');
         }
