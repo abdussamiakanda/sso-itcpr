@@ -178,8 +178,7 @@ async function handleEmailLogin(e) {
         const response = await fetch('https://api.itcpr.org/auth/sso', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${firebaseIdToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ email, password, firebaseIdToken })
         });
