@@ -173,41 +173,33 @@ async function handleEmailLogin(e) {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
         
-        // Step 2: Only call API if there's a redirect URL
-        if (redirectUrl) {
-            const firebaseIdToken = await user.getIdToken();
-            const response = await fetch('https://api.itcpr.org/auth/sso', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${firebaseIdToken}`
-                },
-                body: JSON.stringify({ email, password, firebaseIdToken })
-            });
+        // Step 2: Always call API to get custom SSO token
+        const firebaseIdToken = await user.getIdToken();
+        const response = await fetch('https://api.itcpr.org/auth/sso', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firebaseIdToken}`
+            },
+            body: JSON.stringify({ email, password, firebaseIdToken })
+        });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-            const data = await response.json();
-            
-            if (data.success && data.token) {
-                // Store the custom SSO token
-                customToken = data.token;
-                currentUser = user;
-                
-                hideError();
-                showDashboard();
-                updateUserInfo();
-            } else {
-                throw new Error(data.error || 'Failed to get SSO token');
-            }
-        } else {
-            // No redirect URL, just use Firebase authentication
+        const data = await response.json();
+        
+        if (data.success && data.customToken) {
+            // Store the custom SSO token
+            customToken = data.customToken;
             currentUser = user;
+            
             hideError();
             showDashboard();
             updateUserInfo();
+        } else {
+            throw new Error(data.error || 'Failed to get SSO token');
         }
         
     } catch (error) {
@@ -286,15 +278,18 @@ async function generateSSOToken(targetUrl, appId) {
     if (!currentUser) return;
 
     try {
-        // Use custom SSO token if available, otherwise use Firebase ID token
-        const token = customToken || await currentUser.getIdToken();
+        // Use custom SSO token from API
+        const token = customToken;
+        
+        if (!token) {
+            throw new Error('No SSO token available');
+        }
         
         // Create SSO payload
         const ssoPayload = {
             user: {
                 uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName || currentUser.email
+                email: currentUser.email
             },
             app: appId,
             timestamp: Date.now(),
