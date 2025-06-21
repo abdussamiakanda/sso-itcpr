@@ -164,46 +164,76 @@ async function checkAuthState() {
 async function handleEmailLogin(e) {
     e.preventDefault();
     showLoading(true);
+    hideError();
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
     try {
+        console.log('🔐 Starting login process...');
+        
         // Step 1: Authenticate with Firebase first
+        console.log('📡 Authenticating with Firebase...');
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
+        console.log('✅ Firebase authentication successful');
         
-        // Step 2: Always call API to get custom SSO token
+        // Step 2: Get Firebase ID token
+        console.log('🎫 Getting Firebase ID token...');
         const firebaseIdToken = await user.getIdToken();
+        console.log('✅ Firebase ID token obtained');
+        
+        // Step 3: Call API to get custom SSO token
+        console.log('📡 Calling SSO API...');
         const response = await fetch('https://api.itcpr.org/auth/sso', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, password, firebaseIdToken })
+            body: JSON.stringify({ 
+                email, 
+                password, 
+                firebaseIdToken 
+            })
         });
 
+        console.log(`📊 API Response Status: ${response.status}`);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ API Error Response:', errorText);
+            throw new Error(`API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('📋 API Response Data:', data);
         
         if (data.success && data.customToken) {
             // Store the custom SSO token
             customToken = data.customToken;
             currentUser = user;
+            
+            console.log('✅ SSO token obtained and stored');
+            console.log('🎫 Custom Token Preview:', customToken.substring(0, 50) + '...');
 
             hideError();
             showDashboard();
             updateUserInfo();
         } else {
-            throw new Error(data.error || 'Failed to get SSO token');
+            throw new Error(data.error || 'Failed to get SSO token from API');
         }
         
     } catch (error) {
-        console.error('Login error:', error);
-        showError(getErrorMessage(error.code) || error.message || 'Login failed. Please try again.');
+        console.error('❌ Login error:', error);
+        
+        // Handle specific API errors
+        if (error.message.includes('API error:')) {
+            showError('Server authentication failed. Please try again.');
+        } else if (error.code === 'auth/network-request-failed') {
+            showError('Network error. Please check your connection and try again.');
+        } else {
+            showError(getErrorMessage(error.code) || error.message || 'Login failed. Please try again.');
+        }
     } finally {
         showLoading(false);
     }
@@ -214,8 +244,9 @@ async function handleLogout() {
         await auth.signOut();
         currentUser = null;
         customToken = null;
+        console.log('✅ Logout successful');
     } catch (error) {
-        console.error('Logout error:', error);
+        console.error('❌ Logout error:', error);
     }
 }
 
@@ -263,56 +294,74 @@ function openApp(appId) {
     const app = apps.find(a => a.id === appId);
     if (!app) return;
 
+    console.log(`🚀 Opening app: ${app.name} (${appId})`);
+
     // If there's a redirect URL, use it instead
     if (redirectUrl) {
+        console.log(`📤 Using redirect URL: ${redirectUrl}`);
         generateSSOToken(redirectUrl, appId);
         return;
     }
 
     // Generate SSO token and redirect
+    console.log(`📤 Opening app URL: ${app.url}`);
     generateSSOToken(app.url, appId);
 }
 
 async function generateSSOToken(targetUrl, appId) {
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.error('❌ No current user available');
+        return;
+    }
+
+    if (!customToken) {
+        console.error('❌ No custom token available');
+        showError('Authentication token not available. Please log in again.');
+        return;
+    }
 
     try {
-        // Use custom SSO token from API
-        const token = customToken;
-        
-        if (!token) {
-            throw new Error('No SSO token available');
-        }
+        console.log('🔐 Generating SSO token for app:', appId);
         
         // Create SSO payload
         const ssoPayload = {
             user: {
                 uid: currentUser.uid,
-                email: currentUser.email
+                email: currentUser.email,
+                emailVerified: currentUser.emailVerified
             },
             app: appId,
             timestamp: Date.now(),
-            token: token
+            token: customToken,
+            tokenType: 'custom_token'
         };
+
+        console.log('📋 SSO Payload:', ssoPayload);
 
         // Method 1: Send via URL parameters (for redirects)
         if (redirectUrl) {
             const ssoData = encodeURIComponent(JSON.stringify(ssoPayload));
-            window.location.href = `${redirectUrl}?sso=${ssoData}`;
+            const finalUrl = `${redirectUrl}?sso=${ssoData}`;
+            console.log('🔗 Redirecting to:', finalUrl);
+            window.location.href = finalUrl;
         } else {
             // Method 2: Send via postMessage (for popup windows)
+            console.log('🪟 Opening new window for app');
             const newWindow = window.open(targetUrl, '_blank');
             
             // Wait for the new window to load, then send the SSO data
             setTimeout(() => {
                 if (newWindow && !newWindow.closed) {
+                    console.log('📤 Sending SSO data via postMessage');
                     newWindow.postMessage(ssoPayload, '*');
+                } else {
+                    console.error('❌ New window was closed before sending data');
                 }
             }, 1000);
         }
         
     } catch (error) {
-        console.error('Error generating SSO token:', error);
+        console.error('❌ Error generating SSO token:', error);
         showError('Failed to authenticate with the application');
     }
 }
@@ -346,7 +395,7 @@ function checkPopupMode() {
     const parentUrlParam = urlParams.get('parent');
     
     if (isPopup && parentUrlParam) {
-        console.log('SSO popup mode detected');
+        console.log('🪟 SSO popup mode detected');
         isPopupMode = true;
         parentUrl = parentUrlParam;
         
@@ -360,37 +409,49 @@ function checkPopupMode() {
 
 async function handlePopupAuth() {
     try {
-        // Use custom SSO token if available, otherwise use Firebase ID token
-        const token = customToken || await currentUser.getIdToken();
+        console.log('🪟 Handling popup authentication...');
         
-        // Create SSO payload
+        if (!customToken) {
+            console.error('❌ No custom token available for popup auth');
+            throw new Error('No authentication token available');
+        }
+        
+        // Create SSO payload with custom token
         const ssoPayload = {
             user: {
                 uid: currentUser.uid,
-                email: currentUser.email
+                email: currentUser.email,
+                emailVerified: currentUser.emailVerified
             },
             timestamp: Date.now(),
-            token: token,
+            token: customToken,
+            tokenType: 'custom_token',
             success: true,
         };
 
+        console.log('📋 Popup SSO Payload:', ssoPayload);
+
         // Send message to parent window
         if (window.opener) {
+            console.log('📤 Sending SSO data to parent window');
             window.opener.postMessage(ssoPayload, parentUrl);
         }
 
         // Close the popup after a short delay
         setTimeout(() => {
+            console.log('🔒 Closing popup window');
             window.close();
         }, 500);
 
     } catch (error) {
-        console.error('Popup auth error:', error);
-        handlePopupError('Authentication error');
+        console.error('❌ Popup auth error:', error);
+        handlePopupError('Authentication error: ' + error.message);
     }
 }
 
 function handlePopupError(message) {
+    console.error('❌ Popup error:', message);
+    
     const errorPayload = {
         success: false,
         error: message,
@@ -417,7 +478,9 @@ function getErrorMessage(errorCode) {
         'auth/email-already-in-use': 'An account with this email already exists',
         'auth/network-request-failed': 'Network error. Please check your connection',
         'auth/too-many-requests': 'Too many failed attempts. Please try again later',
-        'auth/user-disabled': 'This account has been disabled'
+        'auth/user-disabled': 'This account has been disabled',
+        'auth/invalid-credential': 'Invalid email or password',
+        'auth/operation-not-allowed': 'Email/password sign in is not enabled'
     };
     
     return errorMessages[errorCode] || 'An error occurred. Please try again.';
