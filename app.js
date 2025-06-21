@@ -194,7 +194,7 @@ async function handleEmailLogin(e) {
             // Store the custom SSO token
             customToken = data.customToken;
             currentUser = user;
-            
+
             hideError();
             showDashboard();
             updateUserInfo();
@@ -368,12 +368,11 @@ async function handlePopupAuth() {
         const ssoPayload = {
             user: {
                 uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName || currentUser.email
+                email: currentUser.email
             },
             timestamp: Date.now(),
             token: token,
-            success: true
+            success: true,
         };
 
         // Send message to parent window
