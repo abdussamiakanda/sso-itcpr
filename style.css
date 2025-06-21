@@ -416,7 +416,6 @@ body {
     
     .dashboard-header {
         padding: 16px 20px;
-        flex-direction: column;
         gap: 12px;
         text-align: center;
         min-height: auto;
@@ -434,7 +433,7 @@ body {
     }
     
     .user-info span {
-        font-size: 14px;
+        display: none;
     }
     
     .btn-logout {
@@ -485,8 +484,8 @@ body {
     }
     
     .btn-logout {
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 8px 12px;
+        font-size: 14px;
     }
     
     .apps-grid {
