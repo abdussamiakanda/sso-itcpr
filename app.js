@@ -170,21 +170,14 @@ async function handleEmailLogin(e) {
     const password = document.getElementById('password').value;
 
     try {
-        console.log('🔐 Starting login process...');
-        
         // Step 1: Authenticate with Firebase first
-        console.log('📡 Authenticating with Firebase...');
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
-        console.log('✅ Firebase authentication successful');
         
         // Step 2: Get Firebase ID token
-        console.log('🎫 Getting Firebase ID token...');
         const firebaseIdToken = await user.getIdToken();
-        console.log('✅ Firebase ID token obtained');
         
         // Step 3: Call API to get custom SSO token
-        console.log('📡 Calling SSO API...');
         const response = await fetch('https://api.itcpr.org/auth/sso', {
             method: 'POST',
             headers: {
@@ -197,24 +190,17 @@ async function handleEmailLogin(e) {
             })
         });
 
-        console.log(`📊 API Response Status: ${response.status}`);
-        
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ API Error Response:', errorText);
             throw new Error(`API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('📋 API Response Data:', data);
         
         if (data.success && data.customToken) {
             // Store the custom SSO token
             customToken = data.customToken;
             currentUser = user;
-            
-            console.log('✅ SSO token obtained and stored');
-            console.log('🎫 Custom Token Preview:', customToken.substring(0, 50) + '...');
 
             hideError();
             showDashboard();
@@ -224,7 +210,7 @@ async function handleEmailLogin(e) {
         }
         
     } catch (error) {
-        console.error('❌ Login error:', error);
+        console.error('Login error:', error);
         
         // Handle specific API errors
         if (error.message.includes('API error:')) {
@@ -244,9 +230,8 @@ async function handleLogout() {
         await auth.signOut();
         currentUser = null;
         customToken = null;
-        console.log('✅ Logout successful');
     } catch (error) {
-        console.error('❌ Logout error:', error);
+        console.error('Logout error:', error);
     }
 }
 
@@ -294,35 +279,29 @@ function openApp(appId) {
     const app = apps.find(a => a.id === appId);
     if (!app) return;
 
-    console.log(`🚀 Opening app: ${app.name} (${appId})`);
-
     // If there's a redirect URL, use it instead
     if (redirectUrl) {
-        console.log(`📤 Using redirect URL: ${redirectUrl}`);
         generateSSOToken(redirectUrl, appId);
         return;
     }
 
     // Generate SSO token and redirect
-    console.log(`📤 Opening app URL: ${app.url}`);
     generateSSOToken(app.url, appId);
 }
 
 async function generateSSOToken(targetUrl, appId) {
     if (!currentUser) {
-        console.error('❌ No current user available');
+        console.error('No current user available');
         return;
     }
 
     if (!customToken) {
-        console.error('❌ No custom token available');
+        console.error('No custom token available');
         showError('Authentication token not available. Please log in again.');
         return;
     }
 
     try {
-        console.log('🔐 Generating SSO token for app:', appId);
-        
         // Create SSO payload
         const ssoPayload = {
             user: {
@@ -336,32 +315,25 @@ async function generateSSOToken(targetUrl, appId) {
             tokenType: 'custom_token'
         };
 
-        console.log('📋 SSO Payload:', ssoPayload);
-
         // Method 1: Send via URL parameters (for redirects)
         if (redirectUrl) {
             const ssoData = encodeURIComponent(JSON.stringify(ssoPayload));
             const finalUrl = `${redirectUrl}?sso=${ssoData}`;
-            console.log('🔗 Redirecting to:', finalUrl);
             window.location.href = finalUrl;
         } else {
             // Method 2: Send via postMessage (for popup windows)
-            console.log('🪟 Opening new window for app');
             const newWindow = window.open(targetUrl, '_blank');
             
             // Wait for the new window to load, then send the SSO data
             setTimeout(() => {
                 if (newWindow && !newWindow.closed) {
-                    console.log('📤 Sending SSO data via postMessage');
                     newWindow.postMessage(ssoPayload, '*');
-                } else {
-                    console.error('❌ New window was closed before sending data');
                 }
             }, 1000);
         }
         
     } catch (error) {
-        console.error('❌ Error generating SSO token:', error);
+        console.error('Error generating SSO token:', error);
         showError('Failed to authenticate with the application');
     }
 }
@@ -395,7 +367,6 @@ function checkPopupMode() {
     const parentUrlParam = urlParams.get('parent');
     
     if (isPopup && parentUrlParam) {
-        console.log('🪟 SSO popup mode detected');
         isPopupMode = true;
         parentUrl = parentUrlParam;
         
@@ -409,10 +380,7 @@ function checkPopupMode() {
 
 async function handlePopupAuth() {
     try {
-        console.log('🪟 Handling popup authentication...');
-        
         if (!customToken) {
-            console.error('❌ No custom token available for popup auth');
             throw new Error('No authentication token available');
         }
         
@@ -429,29 +397,23 @@ async function handlePopupAuth() {
             success: true,
         };
 
-        console.log('📋 Popup SSO Payload:', ssoPayload);
-
         // Send message to parent window
         if (window.opener) {
-            console.log('📤 Sending SSO data to parent window');
             window.opener.postMessage(ssoPayload, parentUrl);
         }
 
         // Close the popup after a short delay
         setTimeout(() => {
-            console.log('🔒 Closing popup window');
             window.close();
         }, 500);
 
     } catch (error) {
-        console.error('❌ Popup auth error:', error);
+        console.error('Popup auth error:', error);
         handlePopupError('Authentication error: ' + error.message);
     }
 }
 
 function handlePopupError(message) {
-    console.error('❌ Popup error:', message);
-    
     const errorPayload = {
         success: false,
         error: message,
