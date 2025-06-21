@@ -181,7 +181,8 @@ async function handleEmailLogin(e) {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${firebaseIdToken}`
-                }
+                },
+                body: JSON.stringify({ email, password, firebaseIdToken })
             });
 
             if (!response.ok) {
