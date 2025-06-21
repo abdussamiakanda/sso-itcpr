@@ -73,6 +73,22 @@ const apps = [
         color: '#84cc16'
     },
     {
+        id: 'events',
+        name: 'Events',
+        description: 'ITCPR events and activities',
+        url: 'https://events.itcpr.org',
+        icon: 'fa-solid fa-calendar',
+        color: '#22c55e'
+    },
+    {
+        id: 'apply',
+        name: 'Apply',
+        description: 'Application portal',
+        url: 'https://apply.itcpr.org',
+        icon: 'fa-solid fa-file-pen',
+        color: '#facc15'
+    },
+    {
         id: 'playground',
         name: 'Playground',
         description: 'Interactive coding environment',
@@ -87,14 +103,6 @@ const apps = [
         url: 'https://forum.itcpr.org',
         icon: 'fa-solid fa-comments',
         color: '#f97316'
-    },
-    {
-        id: 'events',
-        name: 'Events',
-        description: 'ITCPR events and activities',
-        url: 'https://events.itcpr.org',
-        icon: 'fa-solid fa-calendar',
-        color: '#22c55e'
     },
     {
         id: 'news',
