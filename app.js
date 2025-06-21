@@ -296,11 +296,20 @@ async function generateSSOToken(targetUrl, appId) {
             token: token
         };
 
-        // Redirect to target application
+        // Method 1: Send via URL parameters (for redirects)
         if (redirectUrl) {
-            window.location.href = redirectUrl;
+            const ssoData = encodeURIComponent(JSON.stringify(ssoPayload));
+            window.location.href = `${redirectUrl}?sso=${ssoData}`;
         } else {
-            window.open(targetUrl, '_blank');
+            // Method 2: Send via postMessage (for popup windows)
+            const newWindow = window.open(targetUrl, '_blank');
+            
+            // Wait for the new window to load, then send the SSO data
+            setTimeout(() => {
+                if (newWindow && !newWindow.closed) {
+                    newWindow.postMessage(ssoPayload, '*');
+                }
+            }, 1000);
         }
         
     } catch (error) {
