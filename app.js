@@ -16,7 +16,8 @@ const apps = [
         icon: 'fa-solid fa-earth-asia',
         color: '#3b82f6'
     },
-{       id: 'portal',
+    {
+        id: 'portal',
         name: 'Portal',
         description: 'ITCPR portal',
         url: 'https://portal.itcpr.org',
