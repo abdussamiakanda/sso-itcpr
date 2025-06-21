@@ -16,6 +16,13 @@ const apps = [
         icon: 'fa-solid fa-earth-asia',
         color: '#3b82f6'
     },
+{       id: 'portal',
+        name: 'Portal',
+        description: 'ITCPR portal',
+        url: 'https://portal.itcpr.org',
+        icon: 'fa-solid fa-house',
+        color: '#f43f5e'
+    },
     {
         id: 'webmail',
         name: 'Webmail',
@@ -313,12 +320,6 @@ function openApp(appId) {
 async function generateSSOToken(targetUrl, appId) {
     if (!currentUser) {
         console.error('No current user available');
-        return;
-    }
-
-    if (!customToken) {
-        console.error('No custom token available');
-        showError('Authentication token not available. Please log in again.');
         return;
     }
 
