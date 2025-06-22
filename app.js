@@ -468,7 +468,7 @@ function getErrorMessage(errorCode) {
         'auth/operation-not-allowed': 'Email/password sign in is not enabled'
     };
     
-    return errorMessages[errorCode] || 'An error occurred. Please try again.';
+    return errorMessages[errorCode] || 'Incorrect credentials. Please try again.';
 }
 
 // Initialize the SSO application
