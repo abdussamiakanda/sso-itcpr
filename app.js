@@ -388,8 +388,9 @@ function checkPopupMode() {
     const urlParams = new URLSearchParams(window.location.search);
     const isPopup = urlParams.get('popup') === 'true';
     const parentUrlParam = urlParams.get('parent');
+    const url = new URL(parentUrlParam);
     
-    if (isPopup && parentUrlParam) {
+    if (isPopup && parentUrlParam && url.hostname.endsWith('.itcpr.org') || url.hostname === 'itcpr.org') {
         isPopupMode = true;
         parentUrl = parentUrlParam;
         
