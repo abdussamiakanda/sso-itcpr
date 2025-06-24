@@ -390,7 +390,7 @@ function checkPopupMode() {
     const parentUrlParam = urlParams.get('parent');
     const url = new URL(parentUrlParam);
     
-    if (isPopup && parentUrlParam && url.hostname.endsWith('.itcpr.org') || url.hostname === 'itcpr.org') {
+    if (isPopup && parentUrlParam && (url.hostname.endsWith('.itcpr.org') || url.hostname === 'itcpr.org' || url.origin === 'http://127.0.0.1:5500')) {
         isPopupMode = true;
         parentUrl = parentUrlParam;
         
