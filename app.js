@@ -127,6 +127,14 @@ const apps = [
         url: 'https://physics.itcpr.org',
         icon: 'fa-solid fa-gear',
         color: '#64748b'
+    },
+    {
+        id: 'free',
+        name: 'Free',
+        description: 'Find common free time',
+        url: 'https://free.itcpr.org',
+        icon: 'fa-solid fa-calendar-check',
+        color: '#f59e0b'
     }
 ];
 
