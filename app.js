@@ -97,10 +97,10 @@ const apps = [
         color: '#facc15'
     },
     {
-        id: 'playground',
-        name: 'Playground',
+        id: 'buildbox',
+        name: 'Buildbox',
         description: 'Interactive coding environment',
-        url: 'https://playground.itcpr.org',
+        url: 'https://buildbox.itcpr.org',
         icon: 'fa-solid fa-gamepad',
         color: '#ec4899'
     },
