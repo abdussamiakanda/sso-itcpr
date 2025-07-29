@@ -169,12 +169,11 @@ async function checkAuthState() {
         if (user) {
             currentUser = user;
             
-            if (!isPopupMode) {
+            if (isPopupMode) {
                 // In popup mode, check if we have a custom token
                 if (customToken) {
                     // We have a custom token, send auth data to parent and close
                     handlePopupAuth();
-                    console.log('Popup mode detected, sending auth data to parent window');
                 } else {
                     // No custom token, show login form to get one
                     await fetchCustomToken(currentUser);
