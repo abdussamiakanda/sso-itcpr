@@ -141,8 +141,8 @@ const apps = [
 async function init() {
     await checkRedirectUrl();
     await checkPopupMode();
-    await fetchCustomToken();
     await checkAuthState();
+    await fetchCustomToken();
     await setupEventListeners();
 }
 
@@ -165,28 +165,20 @@ async function setupEventListeners() {
     }
 }
 
-async function fetchCustomToken() {
-    // Check if we have a custom token stored in localStorage
-    const storedToken = localStorage.getItem('customToken');
-    if (storedToken) {
-        customToken = storedToken;
-    }
-}
-
 async function checkAuthState() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
             
-            if (isPopupMode) {
+            if (!isPopupMode) {
                 // In popup mode, check if we have a custom token
                 if (customToken) {
                     // We have a custom token, send auth data to parent and close
                     handlePopupAuth();
-                    localStorage.setItem('customToken', customToken);
                 } else {
                     // No custom token, show login form to get one
-                    showLogin();
+                    await fetchCustomToken(currentUser);
+                    await checkAuthState();
                 }
             } else {
                 // Normal mode, show dashboard
@@ -199,6 +191,39 @@ async function checkAuthState() {
             showLogin();
         }
     });
+}
+
+async function fetchCustomToken(user = null) {
+    try {
+        if (user) {
+            const firebaseIdToken = await user.getIdToken();
+
+            const response = await fetch('https://api.itcpr.org/auth/sso', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    email: user.email,
+                    password: 'test',
+                    firebaseIdToken
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API error: ${response.status} - ${errorText}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.customToken) {
+                customToken = data.customToken;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching custom token:', error);
+    }
 }
 
 async function handleEmailLogin(e) {
@@ -242,9 +267,6 @@ async function handleEmailLogin(e) {
             customToken = data.customToken;
             currentUser = user;
 
-            // store custom token in localStorage for later use
-            localStorage.setItem('customToken', customToken);
-
             hideError();
             
             if (isPopupMode) {
@@ -280,7 +302,6 @@ async function handleLogout() {
         await auth.signOut();
         currentUser = null;
         customToken = null;
-        localStorage.removeItem('customToken');
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -410,8 +431,8 @@ async function checkPopupMode() {
     const urlParams = new URLSearchParams(window.location.search);
     const isPopup = urlParams.get('popup') === 'true';
     const parentUrlParam = urlParams.get('parent');
-    const url = new URL(parentUrlParam);
-    
+    const url = parentUrlParam ? new URL(parentUrlParam) : null;
+
     if (isPopup && parentUrlParam && (url.hostname.endsWith('.itcpr.org') || url.hostname === 'itcpr.org' || url.origin === 'http://127.0.0.1:5500')) {
         isPopupMode = true;
         parentUrl = parentUrlParam;
