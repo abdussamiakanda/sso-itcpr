@@ -142,7 +142,6 @@ async function init() {
     await checkRedirectUrl();
     await checkPopupMode();
     await checkAuthState();
-    await fetchCustomToken();
     await setupEventListeners();
 }
 
