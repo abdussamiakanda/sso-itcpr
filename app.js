@@ -174,10 +174,10 @@ async function checkAuthState() {
                 if (customToken) {
                     // We have a custom token, send auth data to parent and close
                     handlePopupAuth();
+                    console.log('Popup mode detected, sending auth data to parent window');
                 } else {
                     // No custom token, show login form to get one
                     await fetchCustomToken(currentUser);
-                    await checkAuthState();
                 }
             } else {
                 // Normal mode, show dashboard
@@ -219,6 +219,8 @@ async function fetchCustomToken(user = null) {
             if (data.success && data.customToken) {
                 customToken = data.customToken;
             }
+
+            await checkAuthState();
         }
     } catch (error) {
         console.error('Error fetching custom token:', error);
