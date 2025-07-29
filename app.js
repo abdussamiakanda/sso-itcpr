@@ -141,6 +141,7 @@ const apps = [
 async function init() {
     await checkRedirectUrl();
     await checkPopupMode();
+    await fetchCustomToken();
     await checkAuthState();
     await setupEventListeners();
 }
@@ -163,6 +164,15 @@ async function setupEventListeners() {
         logoutBtn.addEventListener('click', () => handleLogout());
     }
 }
+
+async function fetchCustomToken() {
+    // Check if we have a custom token stored in localStorage
+    const storedToken = localStorage.getItem('customToken');
+    if (storedToken) {
+        customToken = storedToken;
+    }
+}
+
 
 async function checkAuthState() {
     auth.onAuthStateChanged(async (user) => {
@@ -231,6 +241,9 @@ async function handleEmailLogin(e) {
             // Store the custom SSO token
             customToken = data.customToken;
             currentUser = user;
+
+            // store custom token in localStorage for later use
+            localStorage.setItem('customToken', customToken);
 
             hideError();
             
