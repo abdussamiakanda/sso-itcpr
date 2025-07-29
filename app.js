@@ -140,9 +140,9 @@ const apps = [
 
 async function init() {
     await checkRedirectUrl();
-    await setupEventListeners();
-    await checkAuthState();
     await checkPopupMode();
+    await checkAuthState();
+    await setupEventListeners();
 }
 
 async function checkRedirectUrl() {
@@ -391,7 +391,7 @@ function hideError() {
     }
 }
 
-function checkPopupMode() {
+async function checkPopupMode() {
     // Check if this is opened as a popup/redirect for SSO
     const urlParams = new URLSearchParams(window.location.search);
     const isPopup = urlParams.get('popup') === 'true';
