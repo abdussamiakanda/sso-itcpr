@@ -173,7 +173,6 @@ async function fetchCustomToken() {
     }
 }
 
-
 async function checkAuthState() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
@@ -184,6 +183,7 @@ async function checkAuthState() {
                 if (customToken) {
                     // We have a custom token, send auth data to parent and close
                     handlePopupAuth();
+                    localStorage.setItem('customToken', customToken);
                 } else {
                     // No custom token, show login form to get one
                     showLogin();
@@ -280,6 +280,7 @@ async function handleLogout() {
         await auth.signOut();
         currentUser = null;
         customToken = null;
+        localStorage.removeItem('customToken');
     } catch (error) {
         console.error('Logout error:', error);
     }
