@@ -433,7 +433,7 @@ async function checkPopupMode() {
     const parentUrlParam = urlParams.get('parent');
     const url = parentUrlParam ? new URL(parentUrlParam) : null;
 
-    if (isPopup && parentUrlParam && (url.hostname.endsWith('.itcpr.org') || url.hostname === 'itcpr.org' || url.origin === 'http://127.0.0.1:5500')) {
+    if (isPopup && parentUrlParam && (url.hostname.endsWith('.itcpr.org') || url.hostname === 'itcpr.org' || url.origin === 'http://127.0.0.1:5500' || url.origin === 'http://localhost:5173')) {
         isPopupMode = true;
         parentUrl = parentUrlParam;
         
