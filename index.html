@@ -5,70 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ITCPR SSO Portal</title>
     <link rel="shortcut icon" href="https://portal.itcpr.org/assets/logo.png">
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Login Section -->
-        <div id="login-section" class="login-container">
-            <div class="login-card">
-                <div class="logo">
-                    <h1>ITCPR SSO</h1>
-                    <p>Single Sign-On Portal</p>
-                </div>
-                
-                <form id="login-form" class="login-form">
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" required placeholder="Enter your email">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" required placeholder="Enter your password">
-                    </div>
-                    
-                    <button type="submit" class="btn-primary">Sign In</button>
-                </form>
-                
-                <div id="error-message" class="error-message"></div>
-            </div>
-        </div>
-
-        <!-- Dashboard Section -->
-        <div id="dashboard-section" class="dashboard-container hidden">
-            <header class="dashboard-header">
-                <h1>ITCPR Applications</h1>
-                <div class="user-info">
-                    <span id="user-email"></span>
-                    <button id="logout-btn" class="btn-logout">Logout</button>
-                </div>
-            </header>
-            
-            <div class="apps-grid" id="apps-grid">
-                <!-- Apps will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Loading Spinner -->
-        <div id="loading" class="loading hidden">
-            <div class="spinner"></div>
-            <p>Loading...</p>
-        </div>
-    </div>
-
-    <!-- Crypto Library for TOTP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- App Scripts -->
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
 </body>
-</html> 
+</html>
