@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase-config';
 
 const apps = [
   {
@@ -16,6 +18,15 @@ const apps = [
     url: 'https://portal.itcpr.org',
     icon: 'fa-solid fa-house',
     color: '#f43f5e'
+  },
+  {
+    id: 'staff',
+    name: 'Staff',
+    description: 'Staff management portal',
+    url: 'https://staff.itcpr.org',
+    icon: 'fa-solid fa-users-gear',
+    color: '#a855f7',
+    requiresPosition: 'staff'
   },
   {
     id: 'webmail',
@@ -141,6 +152,33 @@ const apps = [
 
 function Dashboard({ user, customToken, redirectUrl, onLogout }) {
   const [error, setError] = useState('');
+  const [userPosition, setUserPosition] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserPosition = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserPosition(userData.position || null);
+        }
+      } catch (error) {
+        console.error('Error fetching user position:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserPosition();
+  }, [user]);
 
   const generateSSOToken = async (targetUrl, appId) => {
     if (!user) {
@@ -216,26 +254,34 @@ function Dashboard({ user, customToken, redirectUrl, onLogout }) {
       )}
       
       <div className="apps-grid">
-        {apps.map(app => (
-          <div 
-            key={app.id} 
-            className="app-card" 
-            onClick={() => openApp(app.id)}
-          >
-            <div className="app-icon" style={{ backgroundColor: app.color }}>
-              <i className={app.icon}></i>
+        {apps
+          .filter(app => {
+            // Filter apps based on position requirement
+            if (app.requiresPosition) {
+              return userPosition === app.requiresPosition;
+            }
+            return true; // Show apps without position requirements
+          })
+          .map(app => (
+            <div 
+              key={app.id} 
+              className="app-card" 
+              onClick={() => openApp(app.id)}
+            >
+              <div className="app-icon" style={{ backgroundColor: app.color }}>
+                <i className={app.icon}></i>
+              </div>
+              <div className="app-info">
+                <h3>{app.name}</h3>
+                <p>{app.description}</p>
+              </div>
+              <div className="app-arrow">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
             </div>
-            <div className="app-info">
-              <h3>{app.name}</h3>
-              <p>{app.description}</p>
-            </div>
-            <div className="app-arrow">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
