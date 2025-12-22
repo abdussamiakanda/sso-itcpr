@@ -61,6 +61,14 @@ const apps = [
     color: '#ef4444'
   },
   {
+    id: 'cloud',
+    name: 'Cloud',
+    description: 'Cloud resources',
+    url: 'https://cloud.itcpr.org',
+    icon: 'fa-solid fa-cloud',
+    color: '#06b6d4'
+  },
+  {
     id: 'codelab',
     name: 'CodeLab',
     description: 'Code repository',
