@@ -97,32 +97,48 @@ function Login({ onLoginSuccess, API_BASE_URL, API_SSO_ENDPOINT }) {
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
             <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="Enter your email"
-              disabled={loading}
-            />
+            <div className="input-wrapper">
+              <i className="fa-solid fa-envelope input-icon"></i>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="Enter your email"
+                disabled={loading}
+              />
+            </div>
           </div>
           
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter your password"
-              disabled={loading}
-            />
+            <div className="input-wrapper">
+              <i className="fa-solid fa-lock input-icon"></i>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Enter your password"
+                disabled={loading}
+              />
+            </div>
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? (
+              <>
+                <i className="fa-solid fa-spinner fa-spin"></i>
+                <span>Signing In...</span>
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                <span>Sign In</span>
+              </>
+            )}
           </button>
         </form>
         

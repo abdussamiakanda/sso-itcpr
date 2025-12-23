@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase-config';
 
@@ -161,10 +161,14 @@ const apps = [
 function Dashboard({ user, customToken, redirectUrl, onLogout }) {
   const [error, setError] = useState('');
   const [userPosition, setUserPosition] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
-    const fetchUserPosition = async () => {
+    const fetchUserData = async () => {
       if (!user) {
         setLoading(false);
         return;
@@ -177,15 +181,20 @@ function Dashboard({ user, customToken, redirectUrl, onLogout }) {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setUserPosition(userData.position || null);
+          setUserRole(userData.role || null);
+          setUserProfile({
+            name: userData.name || userData.displayName || null,
+            photoURL: userData.photoURL || userData.avatar || null
+          });
         }
       } catch (error) {
-        console.error('Error fetching user position:', error);
+        console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserPosition();
+    fetchUserData();
   }, [user]);
 
   const generateSSOToken = async (targetUrl, appId) => {
@@ -245,13 +254,77 @@ function Dashboard({ user, customToken, redirectUrl, onLogout }) {
     generateSSOToken(app.url, appId);
   };
 
+  const displayName = userProfile?.name || user?.displayName || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = userProfile?.photoURL || user?.photoURL || null;
+  const initials = displayName
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  const avatarSeed = encodeURIComponent(displayName || user?.email || 'User');
+  const avatarFallback = `https://api.dicebear.com/7.x/initials/svg?seed=${avatarSeed}`;
+  const avatarSrc = avatarUrl || avatarFallback;
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1>ITCPR Applications</h1>
-        <div className="user-info">
-          <span>{user.email}</span>
-          <button onClick={onLogout} className="btn-logout">Logout</button>
+        <div className="header-left">
+          <h1>ITCPR Applications</h1>
+          <p className="header-subtitle">Single sign-on access to your tools</p>
+        </div>
+
+        <div className="user-menu" ref={menuRef}>
+          <button
+            className="user-menu-trigger"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-haspopup="true"
+            aria-expanded={menuOpen}
+          >
+            <div className={`user-avatar ${avatarUrl ? 'with-photo' : ''}`}>
+              <img src={avatarSrc} alt={displayName} referrerPolicy="no-referrer" />
+            </div>
+            <i className={`fa-solid fa-chevron-down caret ${menuOpen ? 'open' : ''}`}></i>
+          </button>
+
+          {menuOpen && (
+            <div className="user-dropdown">
+              <div className="user-dropdown-header">
+                <div className={`dropdown-avatar ${avatarUrl ? 'with-photo' : ''}`}>
+                  <img src={avatarSrc} alt={displayName} referrerPolicy="no-referrer" />
+                </div>
+                <div className="dropdown-user-info">
+                  <div className="dropdown-user-name">{displayName}</div>
+                  <div className="dropdown-user-email">{user.email}</div>
+                  {userRole && (
+                    <div><div className="dropdown-user-badge">{userRole.toUpperCase()}</div></div>
+                  )}
+                </div>
+              </div>
+              <div className="user-dropdown-divider"></div>
+              <button className="user-dropdown-item danger" onClick={onLogout}>
+                <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
         </div>
       </header>
       

@@ -26,8 +26,16 @@ function App() {
   const [redirectUrl, setRedirectUrl] = useState(null);
 
   useEffect(() => {
-    // Check for redirect URL
+    // Check for one-time login token
     const urlParams = new URLSearchParams(window.location.search);
+    const oneTimeToken = urlParams.get('token');
+    
+    if (oneTimeToken) {
+      handleOneTimeLogin(oneTimeToken);
+      return;
+    }
+
+    // Check for redirect URL
     const redirect = urlParams.get('redirect');
     if (redirect) {
       setRedirectUrl(redirect);
@@ -171,6 +179,54 @@ function App() {
     
     if (isPopupMode) {
       handlePopupAuth(user, token);
+    }
+  };
+
+  const handleOneTimeLogin = async (token) => {
+    try {
+      setLoading(true);
+      
+      if (!API_BASE_URL || !API_SSO_ENDPOINT) {
+        throw new Error('API configuration is not complete');
+      }
+
+      // Call API to validate one-time token and get SSO token
+      const response = await fetch(`${API_BASE_URL}${API_SSO_ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          oneTimeToken: token
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.customToken) {
+        // Store the custom SSO token
+        setCustomToken(data.customToken);
+        
+        // If user data is provided, we can use it
+        // The auth state will be updated by onAuthStateChanged
+        // Redirect to remove token from URL
+        const newUrl = window.location.pathname + (redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : '');
+        window.history.replaceState({}, document.title, newUrl);
+      } else {
+        throw new Error(data.error || 'Invalid or expired login link');
+      }
+    } catch (error) {
+      console.error('One-time login error:', error);
+      // Redirect to login page and show error
+      window.history.replaceState({}, document.title, window.location.pathname);
+      alert('Invalid or expired login link. Please request a new one.');
+    } finally {
+      setLoading(false);
     }
   };
 
