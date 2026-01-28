@@ -37,10 +37,10 @@ const apps = [
     color: '#8b5cf6'
   },
   {
-    id: 'pay',
-    name: 'Payment',
-    description: 'Payment system',
-    url: 'https://pay.itcpr.org',
+    id: 'account',
+    name: 'Account',
+    description: 'Account system',
+    url: 'https://account.itcpr.org',
     icon: 'fa-solid fa-money-bill',
     color: '#f59e0b'
   },
